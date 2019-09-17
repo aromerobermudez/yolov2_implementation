@@ -1,9 +1,3 @@
-
-# coding: utf-8
-
-# In[2]:
-
-
 import os
 import colorsys
 import imghdr
@@ -16,10 +10,6 @@ from PIL import Image, ImageDraw, ImageFont, ImageColor
 
 
 # ### Filtering boxes
-
-# In[ ]:
-
-
 def yolo_filter_boxes(box_confidence, boxes, box_class_probs, threshold = .6):
     """Filters YOLO boxes looking at probability there's an object and compare with threshold
     
@@ -54,10 +44,6 @@ def yolo_filter_boxes(box_confidence, boxes, box_class_probs, threshold = .6):
 
 
 # ### NonMax suppression
-
-# In[ ]:
-
-
 def yolo_non_max_suppression(scores, boxes, classes, max_boxes = 10, iou_threshold = 0.5):
     """
     Arguments:
@@ -88,10 +74,6 @@ def yolo_non_max_suppression(scores, boxes, classes, max_boxes = 10, iou_thresho
 
 
 # ### Process output of yolo network
-
-# In[ ]:
-
-
 def yolo_boxes_to_corners(box_xy, box_wh):
     """Convert YOLO box predictions to bounding-box corners."""
     box_mins = box_xy - (box_wh / 2.)
@@ -104,10 +86,6 @@ def yolo_boxes_to_corners(box_xy, box_wh):
         box_maxes[..., 0:1]  # x_max
     ])
 
-
-# In[ ]:
-
-
 def scale_boxes(boxes, image_shape):
     """ Scales the predicted boxes in order to be drawable on the image"""
     height = image_shape[0]
@@ -116,10 +94,6 @@ def scale_boxes(boxes, image_shape):
     image_dims = K.reshape(image_dims, [1, 4])
     boxes = boxes * image_dims
     return boxes
-
-
-# In[ ]:
-
 
 def yolo_eval(yolo_outputs, image_shape = (720., 1280.), max_boxes=10, score_threshold=.6, iou_threshold=.5):
     """
@@ -156,9 +130,6 @@ def yolo_eval(yolo_outputs, image_shape = (720., 1280.), max_boxes=10, score_thr
     # Non-max suppression with threshold = iou_threshold 
     scores, boxes, classes = yolo_non_max_suppression(scores, boxes, classes, max_boxes = max_boxes, iou_threshold = iou_threshold)
     return scores, boxes, classes
-
-
-# In[ ]:
 
 
 def yolo_head(feats, anchors, num_classes):
@@ -218,10 +189,6 @@ def yolo_head(feats, anchors, num_classes):
 
 
 # ### Importing image, anchors, classes
-
-# In[ ]:
-
-
 def preprocess_image(img_path, model_image_size):
     image_type = imghdr.what(img_path)
     image = Image.open(img_path)
@@ -230,10 +197,6 @@ def preprocess_image(img_path, model_image_size):
     image_data /= 255.
     image_data = np.expand_dims(image_data, 0)  # Add batch dimension.
     return image, image_data
-
-
-# In[ ]:
-
 
 def read_classes(classes_path):
     with open(classes_path) as f:
@@ -262,10 +225,6 @@ class WeightReader:
 
 
 # ### Drawing boxes
-
-# In[1]:
-
-
 def scale_boxes(boxes, image_shape):
     """ Scales the predicted boxes in order to be drawable on the image"""
     height = image_shape[0]

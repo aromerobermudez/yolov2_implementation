@@ -1,9 +1,3 @@
-
-# coding: utf-8
-
-# In[1]:
-
-
 import os
 import numpy as np
 import scipy.misc
@@ -19,49 +13,34 @@ from keras.models import load_model, Model
 
 
 from my_utils import read_classes, read_anchors, preprocess_image, draw_boxes, scale_boxes, WeightReader, yolo_head, yolo_eval
-get_ipython().run_line_magic('matplotlib', 'inline')
+#%matplotlib inline
+
 
 
 # ### coco_classes.txt: contains 80 classes
 # ### yolo_anchors.txt: the standard 5 anchors used in yolo9000
 # ### yolov2.weights: https://pjreddie.com/media/files/yolo.weights   (name the file yolov2.weights)
-
-# In[2]:
-
-
 class_names = read_classes("model_data/coco_classes.txt")
 anchors = read_anchors("model_data/yolo_anchors.txt")
-wt_path          = '../yolov2.weights' # name of file containing weights
+wt_path          = '/Users/aure/work/industry/Kopernikus/Car detection for Autonomous Driving/yolov2.weights' # name of file containing weights
 
 
 # ### (IMAGE_H, IMAGE_W) are for the internal calculation. Not the actual image size.
 # ### Since we use 32 filters, this means that the grid size is
 # #### (IMAGE_H,IMAGE_W) / F = (19x19)
 # #### we can reduce (IMAGE_H, IMAGE_W) to (416,416), another standard case of yolo, in this case the internal grid is (13x13)
-
-# In[3]:
-
-
 IMAGE_H, IMAGE_W = 608, 608 
 BOX              = 5 # parameter used to choose filters in the last conv layer: F = BOX * (4 + 1 + CLASS)
 CLASS            = len(class_names)
 MAX_BOX_N        = 10 # maximum number of boxes per image
 
 
-# In[4]:
-
-
-# used in the orgnization layer 
+# ### Yolo network
+# used in the orgnization layer
 def space_to_depth_x2(x):
     return tf.space_to_depth(x, block_size=2)
 
-
-# In[5]:
-
-
 input_image = Input(shape=(IMAGE_H, IMAGE_W, 3))
-#true_boxes  = Input(shape=(1, 1, 1, MAX_BOX_N , 4))
-
 # Layer 1
 x = Conv2D(32, (3,3), strides=(1,1), padding='same', name='Conv_1', use_bias=False)(input_image)
 x = BatchNormalization(name='Batch_norm_1')(x)
@@ -186,21 +165,12 @@ x = LeakyReLU(alpha=0.1)(x)
 # Layer 23
 x = Conv2D(BOX * (4 + 1 + CLASS), (1,1), strides=(1,1), padding='same', name='Conv_23')(x)
 
-#model = Model([input_image, true_boxes], outputs = x)
 model = Model(input_image, outputs = x)
 
-
-# In[6]:
-
-
-model.summary()
+print(model.summary())
 
 
 # ### Load weights
-
-# In[7]:
-
-
 weight_reader = WeightReader(wt_path)
 weight_reader.reset()
 nb_conv = 23
@@ -234,10 +204,6 @@ for i in range(1, nb_conv+1):
 
 
 # ### Checking it runs
-
-# In[8]:
-
-
 image_file = "trafico2.jpg"
 image, input_image = preprocess_image("images/" + image_file, model_image_size = (IMAGE_H, IMAGE_W))
 netout = model.predict(input_image)
@@ -245,16 +211,7 @@ netout.shape
 
 
 # ### Session and prediction command
-
-# In[9]:
-
-
 sess = K.get_session()
-
-
-# In[10]:
-
-
 def predict(sess, image_file):
     """
     Runs the graph stored in "sess" to predict boxes for "image_file". Prints and plots the preditions.
@@ -290,52 +247,25 @@ def predict(sess, image_file):
 
 
 # ### Example with traffic that works
-
-# In[11]:
-
-
 image_file = "trafico3.jpg"
 image_shape = (720.,1280.)#(576.,768.)# (Height , Width)
 yolo_outputs = yolo_head(model.output, anchors, len(class_names))
 scores, boxes, classes = yolo_eval(yolo_outputs, image_shape, MAX_BOX_N)
-
-
-# In[12]:
-
-
 out_scores, out_boxes, out_classes = predict(sess, image_file)
 
 
 # ### Example with animals that works
-
-# In[13]:
-
-
 image_file = "animals.jpg"
 image_shape = (1920.,1280.)# (Height , Width)
 yolo_outputs = yolo_head(model.output, anchors, len(class_names))
 scores, boxes, classes = yolo_eval(yolo_outputs, image_shape,MAX_BOX_N)
-
-
-# In[14]:
-
-
 out_scores, out_boxes, out_classes = predict(sess, image_file)
 
 
 # ### Example with traffic that doesn't work (motorcycles are unconventional)
-
-# In[15]:
-
-
 image_file = "trafico4.jpg"
 image_shape = (720.,1280.)#(576.,768.)# (Height , Width)
 yolo_outputs = yolo_head(model.output, anchors, len(class_names))
 scores, boxes, classes = yolo_eval(yolo_outputs, image_shape,MAX_BOX_N)
-
-
-# In[16]:
-
-
 out_scores, out_boxes, out_classes = predict(sess, image_file)
 
